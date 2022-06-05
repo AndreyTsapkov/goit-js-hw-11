@@ -1,26 +1,13 @@
 import './sass/main.scss';
+import { fetchImages, setSearchParams, incrementPage } from './js/fetchImages';
+import { Notify } from 'notiflix/build/notiflix-notify-aio';
 const axios = require('axios').default;
 const refs = {
   searchForm: document.querySelector('.search-form'),
   gallery: document.querySelector('.gallery'),
+  buttonLoadMore: document.querySelector('.load-more'),
 };
-const URL = 'https://pixabay.com/api/';
-const searchParams = new URLSearchParams({
-  key: '27784898-08f565a22f2602ecd9f874e94',
-  q: '',
-  image_type: 'photo',
-  orientation: 'horizontal',
-  safesearch: 'true',
-  page: 1,
-  per_page: 40,
-});
-
-async function fetchImages() {
-  const { data } = await axios.get(`${URL}?${searchParams}`);
-  console.log(data.hits);
-  return data.hits;
-}
-
+let currentNumberofImages = 0;
 function renderCards(data) {
   const renderOneCard = data
     .map(
@@ -50,15 +37,64 @@ function renderCards(data) {
 </div>;`,
     )
     .join('');
-  refs.gallery.innerHTML = renderOneCard;
+  refs.gallery.insertAdjacentHTML('beforeend', renderOneCard);
 }
 
 async function renderMarkup(event) {
   event.preventDefault();
+  buttonLoadMoreHidden();
+  cleanMarkup();
+
   const userRequest = event.currentTarget.elements.searchQuery.value.trim();
-  searchParams.set('q', userRequest);
-  console.log(searchParams.toString());
+  if (!userRequest) {
+    return Notify.info('Please enter text for search');
+  }
+  setSearchParams(userRequest);
+
+  //   console.log(searchParams.toString());
   const data = await fetchImages();
-  renderCards(data);
+  console.log(data.hits);
+  if (data.totalHits === 0) {
+    return Notify.failure(
+      'Sorry, there are no images matching your search query. Please try again.',
+    );
+  }
+  renderCards(data.hits);
+  buttonLoadMoreVisible();
 }
+async function loadMore() {
+  buttonLoadMoreHidden();
+  try {
+    incrementPage();
+    const data = await fetchImages();
+    renderCards(data.hits);
+    smoothScrolling();
+  } catch (error) {
+    console.log('error:', error.message);
+  }
+
+  buttonLoadMoreVisible();
+}
+function buttonLoadMoreHidden() {
+  refs.buttonLoadMore.classList.add('visually-hidden');
+}
+function buttonLoadMoreVisible() {
+  refs.buttonLoadMore.classList.remove('visually-hidden');
+}
+function cleanMarkup() {
+  refs.gallery.innerHTML = '';
+}
+function smoothScrolling() {
+  const { height: cardHeight } = document
+    .querySelector('.gallery')
+    .firstElementChild.getBoundingClientRect();
+
+  window.scrollBy({
+    top: cardHeight * 2,
+    behavior: 'smooth',
+  });
+}
+
+buttonLoadMoreHidden();
 refs.searchForm.addEventListener('submit', renderMarkup);
+refs.buttonLoadMore.addEventListener('click', loadMore);
