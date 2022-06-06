@@ -1,13 +1,19 @@
 import './sass/main.scss';
-import { fetchImages, setSearchParams, incrementPage } from './js/fetchImages';
+import {
+  fetchImages,
+  setSearchParams,
+  incrementPage,
+  incrementCurrentNumberOfImages,
+  resetPage,
+  currentNumberOfImages,
+} from './js/fetchImages';
 import { Notify } from 'notiflix/build/notiflix-notify-aio';
-const axios = require('axios').default;
 const refs = {
   searchForm: document.querySelector('.search-form'),
   gallery: document.querySelector('.gallery'),
   buttonLoadMore: document.querySelector('.load-more'),
 };
-let currentNumberofImages = 0;
+
 function renderCards(data) {
   const renderOneCard = data
     .map(
@@ -42,9 +48,10 @@ function renderCards(data) {
 
 async function renderMarkup(event) {
   event.preventDefault();
+
   buttonLoadMoreHidden();
   cleanMarkup();
-
+  resetPage();
   const userRequest = event.currentTarget.elements.searchQuery.value.trim();
   if (!userRequest) {
     return Notify.info('Please enter text for search');
@@ -52,23 +59,36 @@ async function renderMarkup(event) {
   setSearchParams(userRequest);
 
   //   console.log(searchParams.toString());
-  const data = await fetchImages();
-  console.log(data.hits);
-  if (data.totalHits === 0) {
-    return Notify.failure(
-      'Sorry, there are no images matching your search query. Please try again.',
-    );
+  try {
+    const data = await fetchImages();
+    incrementCurrentNumberOfImages();
+    // console.log(data.hits);
+
+    if (data.totalHits === 0) {
+      return Notify.failure(
+        'Sorry, there are no images matching your search query. Please try again.',
+      );
+    }
+
+    renderCards(data.hits);
+    buttonLoadMoreVisible();
+    checkEndGallery(data);
+  } catch (error) {
+    console.log(error.message);
   }
-  renderCards(data.hits);
-  buttonLoadMoreVisible();
 }
 async function loadMore() {
   buttonLoadMoreHidden();
+
   try {
     incrementPage();
+
     const data = await fetchImages();
+    incrementCurrentNumberOfImages();
+
     renderCards(data.hits);
     smoothScrolling();
+    checkEndGallery(data);
   } catch (error) {
     console.log('error:', error.message);
   }
@@ -93,6 +113,13 @@ function smoothScrolling() {
     top: cardHeight * 2,
     behavior: 'smooth',
   });
+}
+
+function checkEndGallery(data) {
+  if (currentNumberOfImages >= data.totalHits) {
+    Notify.info("We're sorry, but you've reached the end of search results.");
+    buttonLoadMoreHidden();
+  }
 }
 
 buttonLoadMoreHidden();
