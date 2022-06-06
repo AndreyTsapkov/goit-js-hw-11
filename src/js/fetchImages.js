@@ -9,8 +9,11 @@ const searchParams = new URLSearchParams({
   page: 1,
   per_page: 40,
 });
+
 let pageCounter = 1;
+
 export let currentNumberOfImages = 0;
+
 export async function fetchImages() {
   const { data } = await axios.get(`${URL}?${searchParams}`);
   console.log(data);
@@ -24,9 +27,11 @@ export function setSearchParams(params) {
 export function incrementPage() {
   searchParams.set('page', (pageCounter += 1));
 }
+
 export function incrementCurrentNumberOfImages() {
   currentNumberOfImages = pageCounter * searchParams.get('per_page');
 }
+
 export function resetPage() {
   pageCounter = 1;
   searchParams.set('page', pageCounter);

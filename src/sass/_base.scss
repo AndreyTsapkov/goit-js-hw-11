@@ -1,0 +1,47 @@
+/* -------------GLOBAL STYLES------------- */
+
+p,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+ul {
+  margin: 0;
+}
+
+a {
+  text-decoration: none;
+}
+
+ul {
+  padding: 0;
+  list-style: none;
+}
+
+button {
+  cursor: pointer;
+  font-family: inherit;
+
+  &:hover,
+  &:focus {
+    background-color: tomato;
+  }
+}
+
+img {
+  display: block;
+  max-width: 100%;
+  height: 30vw;
+  object-fit: cover;
+  margin: 0 auto;
+}
+
+main {
+  padding-bottom: 40px;
+}
+
+.container {
+  padding: 20px;
+}

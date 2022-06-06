@@ -3,11 +3,15 @@ import {
   fetchImages,
   setSearchParams,
   incrementPage,
-  incrementCurrentNumberOfImages,
   resetPage,
   currentNumberOfImages,
+  incrementCurrentNumberOfImages,
 } from './js/fetchImages';
 import { Notify } from 'notiflix/build/notiflix-notify-aio';
+import SimpleLightbox from 'simplelightbox';
+// Дополнительный импорт стилей
+import 'simplelightbox/dist/simple-lightbox.min.css';
+
 const refs = {
   searchForm: document.querySelector('.search-form'),
   gallery: document.querySelector('.gallery'),
@@ -15,35 +19,35 @@ const refs = {
 };
 
 function renderCards(data) {
-  const renderOneCard = data
+  const renderCards = data
     .map(
       ({ webformatURL, largeImageURL, tags, likes, views, comments, downloads }) =>
         `<div class="photo-card">
-        <a href="${largeImageURL}">
-        <img src="${webformatURL}" alt="${tags}" loading="lazy" />
-        </a>
-        <div class="info">
-        <p class="info-item">
-        <b>Likes</b>
-        ${likes}
-    </p>
-    <p class="info-item">
-      <b>Views</b>
-      ${views}
-    </p>
-    <p class="info-item">
-      <b>Comments</b>
-      ${comments}
-    </p>
-    <p class="info-item">
-      <b>Downloads</b>
-      ${downloads}
-    </p>
-  </div>
-</div>;`,
+          <a href="${largeImageURL}">
+            <img src="${webformatURL}" alt="${tags}" loading="lazy" />
+          </a>
+          <div class="info">
+            <p class="info-item">
+            <b>Likes</b>
+            ${likes}
+            </p>
+            <p class="info-item">
+              <b>Views</b>
+              ${views}
+            </p>
+            <p class="info-item">
+              <b>Comments</b>
+              ${comments}
+            </p>
+            <p class="info-item">
+              <b>Downloads</b>
+              ${downloads}
+            </p>
+          </div>
+        </div>`,
     )
     .join('');
-  refs.gallery.insertAdjacentHTML('beforeend', renderOneCard);
+  refs.gallery.insertAdjacentHTML('beforeend', renderCards);
 }
 
 async function renderMarkup(event) {
@@ -52,6 +56,7 @@ async function renderMarkup(event) {
   buttonLoadMoreHidden();
   cleanMarkup();
   resetPage();
+
   const userRequest = event.currentTarget.elements.searchQuery.value.trim();
   if (!userRequest) {
     return Notify.info('Please enter text for search');
@@ -71,6 +76,8 @@ async function renderMarkup(event) {
     }
 
     renderCards(data.hits);
+    var lightbox = new SimpleLightbox('.gallery a', { captionsData: 'alt', captionDelay: 250 });
+    lightbox.refresh();
     buttonLoadMoreVisible();
     checkEndGallery(data);
   } catch (error) {
@@ -89,6 +96,8 @@ async function loadMore() {
     renderCards(data.hits);
     smoothScrolling();
     checkEndGallery(data);
+    var lightbox = new SimpleLightbox('.gallery a', { captionsData: 'alt', captionDelay: 250 });
+    lightbox.refresh();
   } catch (error) {
     console.log('error:', error.message);
   }
@@ -110,7 +119,7 @@ function smoothScrolling() {
     .firstElementChild.getBoundingClientRect();
 
   window.scrollBy({
-    top: cardHeight * 2,
+    top: cardHeight,
     behavior: 'smooth',
   });
 }
